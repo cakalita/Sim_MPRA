@@ -1,3 +1,5 @@
+load("C:/Users/Cindy/Google Drive/Lab/Tewhey/revisions/5_rep_varyManddB.RData")
+
 #should be able to remove this paragraph when I go back and save the objects with padj in varyManddB.R
 M10_db2 <-  transform(M10_db2, M=10, dB=2, padj_ttest=p.adjust(pval_ttest, method="BH"))
 M10_db1 <-  transform(M10_db1, M=10, dB=1, padj_ttest=p.adjust(pval_ttest, method="BH"))
@@ -39,10 +41,11 @@ trial <-lapply(list1, function(i) {
 		})
 	
 })
-trial1 <- lapply(trial,t)
+zz <- lapply(trial,t)
 
 #loop over list containing power and eFDR calculations and plot QuASAR vs T-test
-zz[] <- lapply(trial1,function(x) replace(x,is.na(x),0))
+zz[] <- lapply(zz,function(x) replace(x,is.na(x),0))
+#plot z by power for QuASAR and TTest over M_dB combinations
 lapply(zz, function(x) {
 	data=data.frame(x)
 	M_label=data$M[1]
@@ -55,3 +58,44 @@ lapply(zz, function(x) {
 	dev.off()
 	})
 
+#plot eFDR by power for QuASAR and TTest over M_dB combinations
+lapply(zz, function(x) {
+	data=data.frame(x)
+	M_label=data$M[1]
+	dB_label=data$dB[1]
+	png(paste0("M",M_label,"_dB",dB_label,"eFDRxPower.png"))
+	plot(x=data$eFDR_Q, y=data$power_Q, col='green',xlim=c(0,1), ylim=c(0, 1),xlab="eFDR",ylab="power",main=paste0("M",M_label," ","dB=",dB_label))
+	lines(x=data$eFDR_Q, y=data$power_Q, col='green')
+	points(x=data$eFDR_T, y=data$power_T, col='blue')
+	lines(x=data$eFDR_T, y=data$power_T, col='blue')
+	dev.off()
+	})
+
+#needs work!
+#plot eFDR by power separating z into line style
+dat <- do.call("rbind", zz)
+zzm <- matrix(unlist(dat),ncol=7,byrow = FALSE)
+zzdf <- data.frame(zzm)
+colnames(zzdf) <- c("power_Q","eFDR_Q" ,"power_T","eFDR_T","Z" ,"M","dB")
+zzdf_sub <- subset(zzdf, M==10)
+M_label=zzdf_sub$M[1]
+#dB_label=zzdf_sub$dB[1]
+png(paste0("M",M_label,"eFDRxPower_combineddB.png"))
+plot(x=zzdf$eFDR_Q[zzdf$M==10], y=zzdf$power_Q[zzdf$M==10], col='green',lty=3,xlim=c(0,1), ylim=c(0, 1),
+	xlab="eFDR",ylab="power",main=paste0("M",M_label," ","zzdf$dB=",dB_label))
+lines(x=zzdf$eFDR_Q[zzdf$M==10], y=zzdf$power_Q[zzdf$M==10], col='green',lty=3)
+points(x=zzdf$eFDR_T[zzdf$M==10], y=zzdf$power_T[zzdf$M==10], col='blue',lty=3)
+lines(x=zzdf$eFDR_T[zzdf$M==10], y=zzdf$power_T[zzdf$M==10], col='blue',lty=3)
+points(x=zzdf$eFDR_Q[zzdf$M==60], y=zzdf$power_Q[zzdf$M==60], col='green',lty=1)
+lines(x=zzdf$eFDR_Q[zzdf$M==60], y=zzdf$power_Q[zzdf$M==60], col='green',lty=1)
+points(x=zzdf$eFDR_T[zzdf$M==60], y=zzdf$power_T[zzdf$M==60], col='blue',lty=1)
+lines(x=zzdf$eFDR_T[zzdf$M==60], y=zzdf$power_T[zzdf$M==60], col='blue',lty=1)
+points(x=zzdf$eFDR_Q[zzdf$M==100], y=zzdf$power_Q[zzdf$M==100], col='green',lty=2)
+lines(x=zzdf$eFDR_Q[zzdf$M==100], y=zzdf$power_Q[zzdf$M==100], col='green',lty=2)
+points(x=zzdf$eFDR_T[zzdf$M==100], y=zzdf$power_T[zzdf$M==100], col='blue',lty=2)
+lines(x=zzdf$eFDR_T[zzdf$M==100], y=zzdf$power_T[zzdf$M==100], col='blue',lty=2)
+#points(x=zzdf$eFDR_Q[zzdf$dB==2], y=zzdf$power_Q[zzdf$dB==2], col='green',,lty=3)
+#lines(x=zzdf$eFDR_Q[zzdf$dB==2], y=zzdf$power_Q[zzdf$dB==2], col='green',lty=3)
+#points(x=zzdf$eFDR_T[zzdf$dB==2], y=zzdf$power_T[zzdf$dB==2], col='blue',lty=3)
+#lines(x=zzdf$eFDR_T[zzdf$dB==2], y=zzdf$power_T[zzdf$dB==2], col='blue',lty=3)
+dev.off()
