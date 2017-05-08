@@ -57,21 +57,21 @@ simRep_null <- replicate(5,simSimple1(prop=DNA_prop,M=100,N=round((dd$R+dd$A)/5+
 dimnames(simRep_null)[[3]] <- paste0("rep",1:5)
 simRep_null2 <- matrix(unlist(simRep_null), ncol = 10, byrow = FALSE)
 simRep_null2 <- data.frame(simRep_null2)
-simRep_null2$R_sum <- rowSums(simRep_null2[,c(1,3,5,7,9)])
-simRep_null2$A_sum <- rowSums(simRep_null2[,c(2,4,6,8,10)])
+simRep_null2$r_sum <- rowSums(simRep_null2[,c(1,3,5,7,9)])
+simRep_null2$a_sum <- rowSums(simRep_null2[,c(2,4,6,8,10)])
 simRep_null2_dna <- cbind(simRep_null2, DNA_sim_df,DNA_prop)
-fitQ_null <- fitQuasarMpra(simRep_null2_dna$R_sum,simRep_null2_dna$A_sum,simRep_null2_dna$DNA_prop)
+fitQ_null <- fitQuasarMpra(simRep_null2_dna$r_sum,simRep_null2_dna$a_sum,simRep_null2_dna$DNA_prop)
+
+#myttest <- function(simRep_null2_dna){
+#	rna_ref <- log2(simRep_null2_dna[,c(1,3,5,7,9)]/simRep_null2_dna[,"DNA_R"])
+#	rna_alt <- log2(simRep_null2_dna[,c(2,4,6,8,10)]/simRep_null2_dna[,"DNA_A"])
+#	apply(rna_ref-rna_alt,1,function(y){tryCatch(t.test(y)$p.value, error=function(x) NA)})
+#}
 
 myttest <- function(simRep_null2_dna){
-	rna_ref <- log2(simRep_null2_dna[,c(1,3,5,7,9)]/simRep_null2_dna[,"DNA_R"])
-	rna_alt <- log2(simRep_null2_dna[,c(2,4,6,8,10)]/simRep_null2_dna[,"DNA_A"])
-	apply(rna_ref-rna_alt,1,function(y){tryCatch(t.test(y)$p.value, error=function(x) NA)})
-}
-
-myttest_trial <- function(simRep_null2_dna){
-	rna_ref <- log2(simRep_null2_dna[ ,grepl("R", names(simRep_null2_dna))]/simRep_null2_dna[,"DNA_R"])
-	rna_alt <- log2(simRep_null2_dna[ ,grepl("A", names(simRep_null2_dna))]/simRep_null2_dna[,"DNA_A"])
-	apply(rna_ref-rna_alt,1,function(y){tryCatch(t.test(y)$p.value, error=function(x) NA)})
+    rna_ref <- log2(simRep_null2_dna[ ,grepl("^R", names(simRep_null2_dna))]/simRep_null2_dna[,"DNA_R"])
+    rna_alt <- log2(simRep_null2_dna[ ,grepl("^A", names(simRep_null2_dna))]/simRep_null2_dna[,"DNA_A"])
+    apply(rna_ref-rna_alt,1,function(y){tryCatch(t.test(y)$p.value, error=function(x) NA)})
 }
 
 pval_ttest <- myttest(simRep_null2_dna)
@@ -104,10 +104,10 @@ simRep_null <- replicate(5,simSimple1(prop=DNA_prop,M=100,N=round((dd$R+dd$A)/3+
 dimnames(simRep_null)[[3]] <- paste0("rep",1:5)
 simRep_null2 <- matrix(unlist(simRep_null), ncol = 10, byrow = FALSE)
 simRep_null2 <- data.frame(simRep_null2)
-simRep_null2$R_sum <- rowSums(simRep_null2[,c(1,3,5,7,9)])
-simRep_null2$A_sum <- rowSums(simRep_null2[,c(2,4,6,8,10)])
+simRep_null2$r_sum <- rowSums(simRep_null2[,c(1,3,5,7,9)])
+simRep_null2$a_sum <- rowSums(simRep_null2[,c(2,4,6,8,10)])
 simRep_null2_dna <- cbind(simRep_null2, DNA_sim_df,DNA_prop)
-fitQ_null <- fitQuasarMpra(simRep_null2_dna$R_sum,simRep_null2_dna$A_sum,simRep_null2_dna$DNA_prop)
+fitQ_null <- fitQuasarMpra(simRep_null2_dna$r_sum,simRep_null2_dna$a_sum,simRep_null2_dna$DNA_prop)
 
 simttest_null <- sim_ttest(x=simRep_null2_dna)
 
@@ -184,17 +184,17 @@ simRep_null5 <- simSimple1(prop=DNA_prop,M=100,N=(lcl5$R+lcl5$A)+1)
 simRep_null_comb <- cbind(simRep_null1, simRep_null2, simRep_null3,simRep_null4,simRep_null5)
 df <- matrix(unlist(simRep_null_comb), ncol = 10, byrow = FALSE)
 df2 <- data.frame(df)
-df2$R_sum <- rowSums(df2[,c(1,3,5,7,9)])
-df2$A_sum <- rowSums(df2[,c(2,4,6,8,10)])
-df2F <- subset(df2, R_sum>=5 & A_sum>=5)
+df2$r_sum <- rowSums(df2[,c(1,3,5,7,9)])
+df2$a_sum <- rowSums(df2[,c(2,4,6,8,10)])
+df2F <- subset(df2, r_sum>=5 & a_sum>=5)
 #df2F <- df2F[1:length(DNA_prop),]
 
-fitQ_null_reps <- fitQuasarMpra(df2F$R_sum,df2F$A_sum,DNA_prop)
+fitQ_null_reps <- fitQuasarMpra(df2F$r_sum,df2F$a_sum,DNA_prop)
 
 simttest_null <- sim_ttest(x=df2F,z=DNA_simF)
 
 simRep_null2_dna <- cbind(simRep_null2, DNA_sim_df,DNA_prop)
-fitQ_null <- fitQuasarMpra(simRep_null2_dna$R_sum,simRep_null2_dna$A_sum,simRep_null2_dna$DNA_prop)
+fitQ_null <- fitQuasarMpra(simRep_null2_dna$r_sum,simRep_null2_dna$a_sum,simRep_null2_dna$DNA_prop)
 
 simttest_null <- sim_ttest(x=simRep_null2_dna)
 
@@ -234,12 +234,15 @@ dimnames(simRepAse20)[[3]] <- paste0("rep",1:5)
 #simRepAse20m <- matrix(unlist(simRepAse20), ncol = 10, byrow = FALSE)
 simRepAse20df <- data.frame(simRepAse20)
 colnames(simRepAse20df) <- c("X1","X2","X3","X4","X5","X6","X7","X8","X9","X10")
-simRepAse20df$R_sum <- rowSums(simRepAse20df[,c(1,3,5,7,9)])
-simRepAse20df$A_sum <- rowSums(simRepAse20df[,c(2,4,6,8,10)])
+simRepAse20df$r_sum <- rowSums(simRepAse20df[,c(1,3,5,7,9)])
+simRepAse20df$a_sum <- rowSums(simRepAse20df[,c(2,4,6,8,10)])
 simRepAse20df_dna <- cbind(simRepAse20df, DNA_sim_df,DNA_prop)
 
 #fitQ <- fitQuasarMpra(rowSums(simRepAse20[,"R",]),rowSums(simRepAse20[,"A",]),DNA_prop)
-fitQ <- fitQuasarMpra(simRepAse20df_dna$R_sum,simRepAse20df_dna$A_sum,simRepAse20df_dna$DNA_prop)
+ptm <- proc.time()
+fitQ <- fitQuasarMpra(simRepAse20df_dna$r_sum,simRepAse20df_dna$a_sum,simRepAse20df_dna$DNA_prop)
+proc.time() - ptm
+
 #simttest_ase20 <- sim_ttest(x=simRepAse20df_dna)
 #df2F <- subset(df2, R_sum>=5 & A_sum>=5)
 
@@ -248,19 +251,28 @@ db <- cbind(simRepAse20df_dna, deltaBeta)
 #db <- subset(simRepAse20df_dna_db, R_sum>=5 & A_sum>=5)
 table(abs(db$deltaBeta)>0, fitQ$padj_quasar<0.1)
 
+ptm <- proc.time()
 pval_ttest <- myttest(simRepAse20df_dna)
+proc.time() - ptm
+
 z <- cbind(simRep_null2_dna,pval_ttest)
 z$padj_ttest <- p.adjust(z$pval_ttest, method="BH")
 
-all <- cbind(db, fitQ, z)
-#all$pval_binom <- sapply(1:nrow(all), function(ii){ 
-#	pval_binom=binom.test(c(all[ii,"R_sum"],all[ii,"A_sum"]),all[ii,"DNA_prop"])$p.value
-#	})
+all <- cbind(db, fitQ, pval_ttest)
+ptm <- proc.time()
+all$pval_binom <- sapply(1:nrow(all), function(ii){ 
+	pval_binom=binom.test(c(all[ii,"r_sum"],all[ii,"a_sum"]),all[ii,"DNA_prop"])$p.value
+	})
+proc.time() - ptm
+
 #fisher test
-#n <- transform(all, DNA_R=DNA_R+1, DNA_A=DNA_A+1, R=R_sum+1, A=A_sum+1)#, ID=paste(rsID,alt_hap,sep="_"))
-##rownames(n) = make.names(n[,19], unique=TRUE)
-#n <- n[,c(11:14)]
-#pval_fisher <- apply(n,1, function(x) fisher.test(matrix(x,nr=2))$p.value)
+n <- transform(all, DNA_R=DNA_R+1, DNA_A=DNA_A+1, R=r_sum+1, A=a_sum+1)#, ID=paste(rsID,alt_hap,sep="_"))
+#rownames(n) = make.names(n[,19], unique=TRUE)
+n <- n[,c(11:14)]
+ptm <- proc.time()
+pval_fisher <- apply(n,1, function(x) fisher.test(matrix(x,nr=2))$p.value)
+proc.time() - ptm
+
 ##test <- data.frame(rsID=names(test), pval_fisher=test, row.names=NULL)
 ##test2 <- transform(test, rsID=gsub("\\.", "\\:", rsID))
 ##x <- strsplit(test2$rsID, "_")
