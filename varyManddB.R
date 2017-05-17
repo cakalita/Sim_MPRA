@@ -31,8 +31,8 @@ myttest <- function(simRep_null2_dna){
     apply(rna_ref-rna_alt,1,function(y){tryCatch(t.test(y)$p.value, error=function(x) NA)})
 }
 
-pval_ttest_trial <- data.frame(pval_ttest=myttest_trial(simRepAse20df_dna))
-pval_ttest_trial$padj_ttest <- p.adjust(pval_ttest_trial$pval_ttest, method="BH")
+#pval_ttest_trial <- data.frame(pval_ttest=myttest_trial(simRepAse20df_dna))
+#pval_ttest_trial$padj_ttest <- p.adjust(pval_ttest_trial$pval_ttest, method="BH")
 
 table(abs(db$deltaBeta)>0, pval_ttest_trial$padj_ttest<0.1)
 
@@ -311,9 +311,9 @@ indNotNull <- sample(length(DNA_prop),round(0.001*length(DNA_prop)))
 length(indNotNull)
 
 deltaBeta <- rep(0,length(DNA_prop))
-deltaBeta[indNotNull] = 0.5
+deltaBeta[indNotNull] = 1
 RNA_prop = plogis((qlogis(DNA_prop)+deltaBeta))
-simRepAse20 <- replicate(8,simSimple1(prop=RNA_prop,M=100,N=round((dd$R+dd$A)/5+1)))
+simRepAse20 <- replicate(8,simSimple1(prop=RNA_prop,M=60,N=round((dd$R+dd$A)/5+1)))
 simRepAse20df <- data.frame(simRepAse20)
 simRepAse20df$r_sum <- rowSums(simRepAse20df[ ,grepl("R", names(simRepAse20df))])
 simRepAse20df$a_sum <- rowSums(simRepAse20df[ ,grepl("A", names(simRepAse20df))])
@@ -326,16 +326,19 @@ pval_ttest_trial$padj_ttest <- p.adjust(pval_ttest_trial$pval_ttest, method="BH"
 #M10_db2 <- cbind(db, fitQ, pval_ttest)
 #M10_db1 <- cbind(db, fitQ, pval_ttest)
 #M10_db0_5 <- cbind(db, fitQ, pval_ttest)
-#M60_db2 <- cbind(db, fitQ, pval_ttest)
-#M60_db1 <- cbind(db, fitQ, pval_ttest)
-#M60_db0_5 <- cbind(db, fitQ, pval_ttest)
+#M60_db2 <- cbind(db, fitQ, pval_ttest_trial)
+M60_db1 <- cbind(db, fitQ, pval_ttest_trial)
+#M60_db0_5 <- cbind(db, fitQ, pval_ttest_trial)
 #M100_db2 <- cbind(db, fitQ, pval_ttest)
 #M100_db1 <- cbind(db, fitQ, pval_ttest)
-M100_db0_5 <- cbind(db, fitQ, pval_ttest)
+#M100_db0_5 <- cbind(db, fitQ, pval_ttest)
 
-save(M10_db2,M10_db1,M10_db0_5,M60_db2,M60_db1,M60_db0_5,
-    M100_db2,M100_db1,M100_db0_5,
-    file="C:/Users/Cindy/Google Drive/Lab/Tewhey/revisions/8_rep_varyManddB.RData")
+#save(M10_db2,M10_db1,M10_db0_5,M60_db2,M60_db1,M60_db0_5,
+#    M100_db2,M100_db1,M100_db0_5,
+#    file="C:/Users/Cindy/Google Drive/Lab/Tewhey/revisions/8_rep_varyManddB.RData")
+save(M60_db2,M60_db1,M60_db0_5,
+    file="C:/Users/Cindy/Google Drive/Lab/Tewhey/revisions/8_rep_2nd_varyManddB.RData")
+
 
 M10_db2 <-  transform(M10_db2, M=10, dB=2)
 M10_db1 <-  transform(M10_db1, M=10, dB=1)
@@ -349,11 +352,12 @@ M100_db0_5 <-  transform(M100_db0_5, M=100, dB=0.5)
 
 #make list object of different simulations (changing variance and effect size (similar to fold change))
 list8 <- list(M10_db2,M10_db1,M10_db0_5,M60_db2,M60_db1,M60_db0_5,M100_db2,M100_db1,M100_db0_5)
+list8_2 <- list(M60_db2,M60_db1,M60_db0_5)
 
 #set up series of padj thresholds
 zvec <- c(0.01,0.02,0.05,0.08,(1:10)/10);
 
-trial <-lapply(list8, function(i) {
+trial <-lapply(list8_2, function(i) {
     #i <- list1[[1]]
     NumTrue <- sum(abs(i$deltaBeta)>0, na.rm=T)
     aux <- sapply(zvec,function(z){
@@ -380,36 +384,36 @@ zz8[] <- lapply(zz8,function(x) replace(x,is.na(x),0))
 #plot ind 1 vs ind 2 dB1 M60
 dat2 <- do.call("rbind", zz8)
 zzm2 <- matrix(unlist(dat2),ncol=7,byrow = FALSE)
-zzdf8 <- data.frame(zzm2)
-colnames(zzdf8) <- c("power_Q","eFDR_Q" ,"power_T","eFDR_T","Z" ,"M","dB")
+rowCdf <- data.frame(zzm2)
+colnames(rowCdf) <- c("power_Q","eFDR_Q" ,"power_T","eFDR_T","Z" ,"M","dB")
 
-plot(x=zzdf2$Z[zzdf2$M==60 & zzdf2$dB==1], y=zzdf2$power_Q[zzdf2$M==60 & zzdf2$dB==1], col='lightgreen',lty=3,xlim=c(0,1), ylim=c(0, 1),
+plot(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$power_Q[rowCdf$M==60 & rowCdf$dB==1], col='lightgreen',lty=3,xlim=c(0,1), ylim=c(0, 1),
     xlab="Z",ylab="power",main=paste0("M=60 dB=1 3,5,8 reps"))
-lines(x=zzdf2$Z[zzdf2$M==60 & zzdf2$dB==1], y=zzdf2$power_Q[zzdf2$M==60 & zzdf2$dB==1], col='lightgreen',lty=3)
-points(x=zzdf2$Z[zzdf2$M==60 & zzdf2$dB==1], y=zzdf2$power_T[zzdf2$M==60 & zzdf2$dB==1], col='lightblue',lty=3)
-lines(x=zzdf2$Z[zzdf2$M==60 & zzdf2$dB==1], y=zzdf2$power_T[zzdf2$M==60 & zzdf2$dB==1], col='lightblue',lty=3)
-points(x=zzdf$Z[zzdf$M==60 & zzdf$dB==1], y=zzdf$power_Q[zzdf$M==60 & zzdf$dB==1], col='green',lty=1)
-lines(x=zzdf$Z[zzdf$M==60 & zzdf$dB==1], y=zzdf$power_Q[zzdf$M==60 & zzdf$dB==1], col='green',lty=1)
-points(x=zzdf$Z[zzdf$M==60 & zzdf$dB==1], y=zzdf$power_T[zzdf$M==60 & zzdf$dB==1], col='blue',lty=1)
-lines(x=zzdf$Z[zzdf$M==60 & zzdf$dB==1], y=zzdf$power_T[zzdf$M==60 & zzdf$dB==1], col='blue',lty=1)
-points(x=zzdf8$Z[zzdf8$M==60 & zzdf8$dB==1], y=zzdf8$power_Q[zzdf8$M==60 & zzdf8$dB==1], col='darkgreen',lty=2)
-lines(x=zzdf8$Z[zzdf8$M==60 & zzdf8$dB==1], y=zzdf8$power_Q[zzdf8$M==60 & zzdf8$dB==1], col='darkgreen',lty=2)
-points(x=zzdf8$Z[zzdf8$M==60 & zzdf8$dB==1], y=zzdf8$power_T[zzdf8$M==60 & zzdf8$dB==1], col='darkblue',lty=2)
-lines(x=zzdf8$Z[zzdf8$M==60 & zzdf8$dB==1], y=zzdf8$power_T[zzdf8$M==60 & zzdf8$dB==1], col='darkblue',lty=2)
+lines(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$power_Q[rowCdf$M==60 & rowCdf$dB==1], col='lightgreen',lty=3)
+points(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$power_T[rowCdf$M==60 & rowCdf$dB==1], col='lightblue',lty=3)
+lines(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$power_T[rowCdf$M==60 & rowCdf$dB==1], col='lightblue',lty=3)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==60 & rowAdf$dB==1], col='green',lty=1)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==60 & rowAdf$dB==1], col='green',lty=1)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==60 & rowAdf$dB==1], col='blue',lty=1)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==60 & rowAdf$dB==1], col='blue',lty=1)
+points(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$power_Q[rowCdf$M==60 & rowCdf$dB==1], col='darkgreen',lty=2)
+lines(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$power_Q[rowCdf$M==60 & rowCdf$dB==1], col='darkgreen',lty=2)
+points(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$power_T[rowCdf$M==60 & rowCdf$dB==1], col='darkblue',lty=2)
+lines(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$power_T[rowCdf$M==60 & rowCdf$dB==1], col='darkblue',lty=2)
 
-plot(x=zzdf2$Z[zzdf2$M==60 & zzdf2$dB==1], y=zzdf2$eFDR_Q[zzdf2$M==60 & zzdf2$dB==1], col='lightgreen',lty=3,xlim=c(0,1), ylim=c(0, 1),
+plot(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$eFDR_Q[rowCdf$M==60 & rowCdf$dB==1], col='lightgreen',lty=3,xlim=c(0,1), ylim=c(0, 1),
     xlab="Z",ylab="eFDR",main=paste0("M=60 dB=1 3,5,8 reps"))
-lines(x=zzdf2$Z[zzdf2$M==60 & zzdf2$dB==1], y=zzdf2$eFDR_Q[zzdf2$M==60 & zzdf2$dB==1], col='lightgreen',lty=3)
-points(x=zzdf2$Z[zzdf2$M==60 & zzdf2$dB==1], y=zzdf2$eFDR_T[zzdf2$M==60 & zzdf2$dB==1], col='lightblue',lty=3)
-lines(x=zzdf2$Z[zzdf2$M==60 & zzdf2$dB==1], y=zzdf2$eFDR_T[zzdf2$M==60 & zzdf2$dB==1], col='lightblue',lty=3)
-points(x=zzdf$Z[zzdf$M==60 & zzdf$dB==1], y=zzdf$eFDR_Q[zzdf$M==60 & zzdf$dB==1], col='green',lty=1)
-lines(x=zzdf$Z[zzdf$M==60 & zzdf$dB==1], y=zzdf$eFDR_Q[zzdf$M==60 & zzdf$dB==1], col='green',lty=1)
-points(x=zzdf$Z[zzdf$M==60 & zzdf$dB==1], y=zzdf$eFDR_T[zzdf$M==60 & zzdf$dB==1], col='blue',lty=1)
-lines(x=zzdf$Z[zzdf$M==60 & zzdf$dB==1], y=zzdf$eFDR_T[zzdf$M==60 & zzdf$dB==1], col='blue',lty=1)
-points(x=zzdf8$Z[zzdf8$M==60 & zzdf8$dB==1], y=zzdf8$eFDR_Q[zzdf8$M==60 & zzdf8$dB==1], col='darkgreen',lty=2)
-lines(x=zzdf8$Z[zzdf8$M==60 & zzdf8$dB==1], y=zzdf8$eFDR_Q[zzdf8$M==60 & zzdf8$dB==1], col='darkgreen',lty=2)
-points(x=zzdf8$Z[zzdf8$M==60 & zzdf8$dB==1], y=zzdf8$eFDR_T[zzdf8$M==60 & zzdf8$dB==1], col='darkblue',lty=2)
-lines(x=zzdf8$Z[zzdf8$M==60 & zzdf8$dB==1], y=zzdf8$eFDR_T[zzdf8$M==60 & zzdf8$dB==1], col='darkblue',lty=2)
+lines(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$eFDR_Q[rowCdf$M==60 & rowCdf$dB==1], col='lightgreen',lty=3)
+points(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$eFDR_T[rowCdf$M==60 & rowCdf$dB==1], col='lightblue',lty=3)
+lines(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$eFDR_T[rowCdf$M==60 & rowCdf$dB==1], col='lightblue',lty=3)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==60 & rowAdf$dB==1], col='green',lty=1)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==60 & rowAdf$dB==1], col='green',lty=1)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==60 & rowAdf$dB==1], col='blue',lty=1)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==60 & rowAdf$dB==1], col='blue',lty=1)
+points(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$eFDR_Q[rowCdf$M==60 & rowCdf$dB==1], col='darkgreen',lty=2)
+lines(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$eFDR_Q[rowCdf$M==60 & rowCdf$dB==1], col='darkgreen',lty=2)
+points(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$eFDR_T[rowCdf$M==60 & rowCdf$dB==1], col='darkblue',lty=2)
+lines(x=rowCdf$Z[rowCdf$M==60 & rowCdf$dB==1], y=rowCdf$eFDR_T[rowCdf$M==60 & rowCdf$dB==1], col='darkblue',lty=2)
 abline(0,1, col='red')
 
 
@@ -426,8 +430,8 @@ abline(0,1, col='red')
 
 
 
-
-
+dBvec <- c(0.5,1,2)
+Mvec <- c(10,60,100)
 #loop over set of simulations (possibly could work on this and add in the actual simulation with loop over M and dB conditions more automatically)
 trial8_loops <-sapply(dBvec, function(d) {
     deltaBeta <- rep(0,length(DNA_prop))
@@ -446,7 +450,7 @@ trial8_loops <-sapply(dBvec, function(d) {
         pval_ttest_trial$padj_ttest <- p.adjust(pval_ttest_trial$pval_ttest, method="BH")
         #i <- list8[[1]]
         NumTrue <- sum(abs(i$deltaBeta)>0, na.rm=T)
-        M_dB <- cbind(db, fitQ, pval_ttest)
+        M_dB <- cbind(db, fitQ, pval_ttest_trial)
         M_dB <-  transform(M_dB, M=m, dB=d)
             aux2 <- sapply(zvec,function(z){
                 NumDiscQ <- sum(M_dB$padj_quasar<z,na.rm=T)
@@ -464,6 +468,257 @@ trial8_loops <-sapply(dBvec, function(d) {
                     M=M,
                     dB=deltaBeta) 
             })
+            aux2 <- do.call(rbind,aux2)
+            aux2
     })
-
+    aux <- do.call(rbind,aux)
+    aux
 })
+trial8_loops <- do.call(rbind,trial8_loops)
+
+
+simulAndEval <- function(zvec,DNA_prop,m=60,d=1,reps=5,reads.div=5){
+   deltaBeta <- rep(0,length(DNA_prop))
+    deltaBeta[indNotNull] = d
+    RNA_prop = plogis((qlogis(DNA_prop)+deltaBeta))
+
+        simRepAse20 <- replicate(reps,simSimple1(prop=RNA_prop,M=m,N=round((dd$R+dd$A)/reads.div+1)))
+        simRepAse20df <- data.frame(simRepAse20)
+        simRepAse20df$r_sum <- rowSums(simRepAse20df[ ,grepl("R", names(simRepAse20df))])
+        simRepAse20df$a_sum <- rowSums(simRepAse20df[ ,grepl("A", names(simRepAse20df))])
+        simRepAse20df_dna <- cbind(simRepAse20df, DNA_sim_df,DNA_prop)
+        fitQ <- fitQuasarMpra(simRepAse20df_dna$r_sum,simRepAse20df_dna$a_sum,simRepAse20df_dna$DNA_prop)
+        #table(abs(deltaBeta)>0, fitQ$padj_quasar<0.1)
+        db <- cbind(simRepAse20df_dna, deltaBeta)
+        pval_ttest_trial <- data.frame(pval_ttest=myttest_trial(simRepAse20df_dna))
+        pval_ttest_trial$padj_ttest <- p.adjust(pval_ttest_trial$pval_ttest, method="BH")
+        #i <- list8[[1]]
+        NumTrue <- sum(abs(deltaBeta)>0, na.rm=T)
+        M_dB <- cbind(db, fitQ, pval_ttest_trial)
+        M_dB <-  transform(M_dB, M=m, dB=d)
+            aux2 <- sapply(zvec,function(z){
+                NumDiscQ <- sum(M_dB$padj_quasar<z,na.rm=T)
+                NumDiscT <- sum(M_dB$padj_ttest<z,na.rm=T) 
+                NumTrueDiscQ <- sum(M_dB$padj_quasar<z & abs(M_dB$deltaBeta)>0, na.rm=T) 
+                NumTrueDiscT <- sum(M_dB$padj_ttest<z & abs(M_dB$deltaBeta)>0, na.rm=T) 
+                M <- M_dB$M[1]
+                deltaBeta = M_dB$dB[1]
+                c(
+                    power_Q=(NumTrueDiscQ/NumTrue),
+                    eFDR_Q=(NumDiscQ - NumTrueDiscQ)/NumDiscQ,
+                    power_T=(NumTrueDiscT/NumTrue),
+                    eFDR_T=(NumDiscT - NumTrueDiscT)/NumDiscT,
+                    Z=z, 
+                    M=M,
+                    dB=deltaBeta,
+                    reps=reps,
+                    reads.div=reads.div
+                    ) 
+            })
+            aux2 <- as.matrix(t(aux2))
+            aux2 <- replace(aux2,is.na(aux2),0)
+            aux2
+}
+
+aux2 <- simulAndEval(zvec,DNA_prop)
+
+
+simulAndEvalRep <- function(zvec,DNA_prop,m=60,d=1,reps=5,reads.div=5,simReps=5){
+    aux<- replicate(simReps,simulAndEval(zvec,DNA_prop,m=m,d=d,reps=reps,reads.div=reads.div))
+    apply(aux,c(1,2),mean)
+    #lapply(auxlist,function(x) replace(x,is.na(x),0))
+    ##do.call(mean,auxlist)
+    ##auxlist
+}
+#zz_div2[] <- lapply(zz_div2,function(x) replace(x,is.na(x),0))
+
+aux2 <- simulAndEvalRep(zvec,DNA_prop,m=60,d=1,reps=5,reads.div=5,simReps=5)
+
+rowA <- lapply(list(10,60,100),function(m){
+    simulAndEvalRep(zvec,DNA_prop,m=m,d=1,reps=5,reads.div=5,simReps=5)
+})
+dat <- do.call("rbind", rowA)
+rowAdf <- data.frame(dat)
+
+rowB <- lapply(list(0.5,2),function(d){
+    simulAndEvalRep(zvec,DNA_prop,m=60,d=d,reps=5,reads.div=5,simReps=5)
+})
+dat <- do.call("rbind", rowB)
+rowBdf <- data.frame(dat)
+
+rowC <- lapply(list(3,8),function(reps){
+    simulAndEvalRep(zvec,DNA_prop,m=60,d=1,reps=reps,reads.div=5,simReps=5)
+})
+dat <- do.call("rbind", rowC)
+rowCdf <- data.frame(dat)
+
+rowD <- lapply(list(2,10),function(reads.div){
+    simulAndEvalRep(zvec,DNA_prop,m=60,d=1,reps=5,reads.div=reads.div,simReps=5)
+})
+dat <- do.call("rbind", rowD)
+rowDdf <- data.frame(dat)
+
+save(rowAdf, rowBdf, rowCdf, rowDdf, file="simulations_5reps.RData")
+
+png(paste0("Mvaried_dB1_zxPower_combineddB_noM100_linethick_nomargin.png"),width=800*4,height=900*4,pointsize=12*4*1.5)
+#par(mfrow=c(5,3))
+par(mar = (c(0, 0, 0, 0)+0.25), oma = c(4, 1, 3, 3))
+layout(matrix(1:12,nrow=4, ncol=3, byrow=TRUE), widths=c(1.25,2,2))
+    legText <- c("QuASAR-MPRA","M=10","M=60","M=100","T-test","M=10","M=60","M=100")
+    # create a blank graph -- automatically scales -1 to +1 on both axes 
+    barplot(0,0, axes=FALSE) 
+    legend(x=0.8, y=0,
+        title=paste0("M=varied dB=1"), 
+           legend=legText, 
+           col=c(NA,"green1","green3","green4",NA,"royalblue1","royalblue3","royalblue4"),
+           lwd=c(NA,5*4,3*4,2*4,NA,5*4,3*4,2*4),
+           xjust=1, 
+           yjust=0.5) 
+plot(x=rowAdf$Z[rowAdf$M==10 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==10 & rowAdf$dB==1], col='green1',lwd=5*4,xlim=c(0,1), ylim=c(0, 1),
+  xlab="",ylab="",xaxt='n',yaxt='n')
+mtext("Power",side=3,line=1)
+lines(x=rowAdf$Z[rowAdf$M==10 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==10 & rowAdf$dB==1], col='green1',lwd=5*4)
+points(x=rowAdf$Z[rowAdf$M==10 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==10 & rowAdf$dB==1], col='royalblue1',lwd=5*4)
+lines(x=rowAdf$Z[rowAdf$M==10 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==10 & rowAdf$dB==1], col='royalblue1',lwd=5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+points(x=rowAdf$Z[rowAdf$M==100 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==100 & rowAdf$dB==1], col='green4',lwd=2*4)
+lines(x=rowAdf$Z[rowAdf$M==100 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==100 & rowAdf$dB==1], col='green4',lwd=2*4)
+points(x=rowAdf$Z[rowAdf$M==100 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==100 & rowAdf$dB==1], col='royalblue4',lwd=2*4)
+lines(x=rowAdf$Z[rowAdf$M==100 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==100 & rowAdf$dB==1], col='royalblue4',lwd=2*4)
+plot(x=rowAdf$Z[rowAdf$M==10 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==10 & rowAdf$dB==1], col='green1',lwd=5*4,xlim=c(0,1), ylim=c(0, 1),
+  xlab="",ylab="",xaxt='n',yaxt='n')
+mtext("eFDR",side=3,line=1)
+axis(4, las=1)
+lines(x=rowAdf$Z[rowAdf$M==10 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==10 & rowAdf$dB==1], col='green1',lwd=5*4)
+points(x=rowAdf$Z[rowAdf$M==10 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==10 & rowAdf$dB==1], col='royalblue1',lwd=5*4)
+lines(x=rowAdf$Z[rowAdf$M==10 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==10 & rowAdf$dB==1], col='royalblue1',lwd=5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+points(x=rowAdf$Z[rowAdf$M==100 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==100 & rowAdf$dB==1], col='green4',lwd=2*4)
+lines(x=rowAdf$Z[rowAdf$M==100 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==100 & rowAdf$dB==1], col='green4',lwd=2*4)
+points(x=rowAdf$Z[rowAdf$M==100 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==100 & rowAdf$dB==1], col='royalblue4',lwd=2*4)
+lines(x=rowAdf$Z[rowAdf$M==100 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==100 & rowAdf$dB==1], col='royalblue4',lwd=2*4)
+abline(0,1, col='red')
+    legText <- c("QuASAR-MPRA","dB=0.5","dB=1","dB=2","T-test","dB=0.5","dB=1","dB=2")
+    # create a blank graph -- automatically scales -1 to +1 on both axes 
+    barplot(0,0, axes=FALSE) 
+    legend(x=0.8, y=0, 
+        title=paste0("M=60 dB=varied"),
+           legend=legText, 
+           col=c(NA,"green1","green3","green4",NA,"royalblue1","royalblue3","royalblue4"),
+           lwd=c(NA,5*4,3*4,2*4,NA,5*4,3*4,2*4),
+           xjust=1, 
+           yjust=0.5) 
+plot(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==0.5], y=rowBdf$power_Q[rowBdf$M==60 & rowBdf$dB==0.5], col='green1',lwd=5*4,xlim=c(0,1), ylim=c(0, 1)
+  ,xlab="",ylab="",xaxt='n',yaxt='n')
+lines(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==0.5], y=rowBdf$power_Q[rowBdf$M==60 & rowBdf$dB==0.5], col='green1',lwd=5*4)
+points(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==0.5], y=rowBdf$power_T[rowBdf$M==60 & rowBdf$dB==0.5], col='royalblue1',lwd=5*4)
+lines(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==0.5], y=rowBdf$power_T[rowBdf$M==60 & rowBdf$dB==0.5], col='royalblue1',lwd=5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+points(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==2], y=rowBdf$power_Q[rowBdf$M==60 & rowBdf$dB==2], col='green4',lwd=2*4)
+lines(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==2], y=rowBdf$power_Q[rowBdf$M==60 & rowBdf$dB==2], col='green4',lwd=2*4)
+points(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==2], y=rowBdf$power_T[rowBdf$M==60 & rowBdf$dB==2], col='royalblue4',lwd=2*4)
+lines(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==2], y=rowBdf$power_T[rowBdf$M==60 & rowBdf$dB==2], col='royalblue4',lwd=2*4)
+plot(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==0.5], y=rowBdf$eFDR_Q[rowBdf$M==60 & rowBdf$dB==0.5], col='green1',lwd=5*4,xlim=c(0,1), ylim=c(0, 1)
+  ,xlab="",ylab="",xaxt='n',yaxt='n')
+axis(4, las=1)
+lines(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==0.5], y=rowBdf$eFDR_Q[rowBdf$M==60 & rowBdf$dB==0.5], col='green1',lwd=5*4)
+points(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==0.5], y=rowBdf$eFDR_T[rowBdf$M==60 & rowBdf$dB==0.5], col='royalblue1',lwd=5*4)
+lines(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==0.5], y=rowBdf$eFDR_T[rowBdf$M==60 & rowBdf$dB==0.5], col='royalblue1',lwd=5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+points(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==2], y=rowBdf$eFDR_Q[rowBdf$M==60 & rowBdf$dB==2], col='green4',lwd=2*4)
+lines(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==2], y=rowBdf$eFDR_Q[rowBdf$M==60 & rowBdf$dB==2], col='green4',lwd=2*4)
+points(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==2], y=rowBdf$eFDR_T[rowBdf$M==60 & rowBdf$dB==2], col='royalblue4',lwd=2*4)
+lines(x=rowBdf$Z[rowBdf$M==60 & rowBdf$dB==2], y=rowBdf$eFDR_T[rowBdf$M==60 & rowBdf$dB==2], col='royalblue4',lwd=2*4)
+abline(0,1, col='red')
+    legText <- c("QuASAR-MPRA","3 reps","5 reps","8 reps","T-test","3 reps","5 reps","8 reps")
+    # create a blank graph -- automatically scales -1 to +1 on both axes 
+    barplot(0,0, axes=FALSE) 
+    legend(x=0.8, y=0, 
+      title=paste0("M=60 dB=1"),
+           legend=legText, 
+           col=c(NA,"green1","green3","green4",NA,"royalblue1","royalblue3","royalblue4"),
+           lwd=c(NA,5*4,3*4,2*4,NA,5*4,3*4,2*4),
+           xjust=1, 
+           yjust=0.5) 
+plot(x=rowCdf$Z[rowCdf$reps==3 & rowCdf$dB==1], y=rowCdf$power_Q[rowCdf$reps==3 & rowCdf$dB==1], col='green1',lwd=5*4,xlim=c(0,1), ylim=c(0, 1)
+  ,xlab="",ylab="",xaxt='n',yaxt='n')
+lines(x=rowCdf$Z[rowCdf$reps==3 & rowCdf$dB==1], y=rowCdf$power_Q[rowCdf$reps==3 & rowCdf$dB==1], col='green1',lwd=5*4)
+points(x=rowCdf$Z[rowCdf$reps==3 & rowCdf$dB==1], y=rowCdf$power_T[rowCdf$reps==3 & rowCdf$dB==1], col='royalblue1',lwd=5*4)
+lines(x=rowCdf$Z[rowCdf$reps==3 & rowCdf$dB==1], y=rowCdf$power_T[rowCdf$reps==3 & rowCdf$dB==1], col='royalblue1',lwd=5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+points(x=rowCdf$Z[rowCdf$reps==8 & rowCdf$dB==1], y=rowCdf$power_Q[rowCdf$reps==8 & rowCdf$dB==1], col='green4',lwd=2*4)
+lines(x=rowCdf$Z[rowCdf$reps==8 & rowCdf$dB==1], y=rowCdf$power_Q[rowCdf$reps==8 & rowCdf$dB==1], col='green4',lwd=2*4)
+points(x=rowCdf$Z[rowCdf$reps==8 & rowCdf$dB==1], y=rowCdf$power_T[rowCdf$reps==8 & rowCdf$dB==1], col='royalblue4',lwd=2*4)
+lines(x=rowCdf$Z[rowCdf$reps==8 & rowCdf$dB==1], y=rowCdf$power_T[rowCdf$reps==8 & rowCdf$dB==1], col='royalblue4',lwd=2*4)
+plot(x=rowCdf$Z[rowCdf$reps==3 & rowCdf$dB==1], y=rowCdf$eFDR_Q[rowCdf$reps==3 & rowCdf$dB==1], col='green1',lwd=5*4,xlim=c(0,1), ylim=c(0, 1)
+  ,xlab="",ylab="",xaxt='n',yaxt='n')
+axis(4, las=1)
+lines(x=rowCdf$Z[rowCdf$reps==3 & rowCdf$dB==1], y=rowCdf$eFDR_Q[rowCdf$reps==3 & rowCdf$dB==1], col='green1',lwd=5*4)
+points(x=rowCdf$Z[rowCdf$reps==3 & rowCdf$dB==1], y=rowCdf$eFDR_T[rowCdf$reps==3 & rowCdf$dB==1], col='royalblue1',lwd=5*4)
+lines(x=rowCdf$Z[rowCdf$reps==3 & rowCdf$dB==1], y=rowCdf$eFDR_T[rowCdf$reps==3 & rowCdf$dB==1], col='royalblue1',lwd=5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+points(x=rowCdf$Z[rowCdf$reps==8 & rowCdf$dB==1], y=rowCdf$eFDR_Q[rowCdf$reps==8 & rowCdf$dB==1], col='green4',lwd=2*4)
+lines(x=rowCdf$Z[rowCdf$reps==8 & rowCdf$dB==1], y=rowCdf$eFDR_Q[rowCdf$reps==8 & rowCdf$dB==1], col='green4',lwd=2*4)
+points(x=rowCdf$Z[rowCdf$reps==8 & rowCdf$dB==1], y=rowCdf$eFDR_T[rowCdf$reps==8 & rowCdf$dB==1], col='royalblue4',lwd=2*4)
+lines(x=rowCdf$Z[rowCdf$reps==8 & rowCdf$dB==1], y=rowCdf$eFDR_T[rowCdf$reps==8 & rowCdf$dB==1], col='royalblue4',lwd=2*4)
+abline(0,1, col='red')
+    legText <- c("QuASAR-MPRA","Reads 1/2","Reads 1/5","Reads 1/10","T-test","Reads 1/2","Reads 1/5","Reads 1/10")
+    # create a blank graph -- automatically scales -1 to +1 on both axes 
+    barplot(0,0, axes=FALSE) 
+    legend(x=0.8, y=0, 
+      title=paste0("M=60 dB=1"),
+           legend=legText, 
+           col=c(NA,"green1","green3","green4",NA,"royalblue1","royalblue3","royalblue4"),
+           lwd=c(NA,5*4,3*4,2*4,NA,5*4,3*4,2*4),
+           xjust=1, 
+           yjust=0.5) 
+plot(x=rowDdf$Z[rowDdf$reads.div==2 & rowDdf$dB==1], y=rowDdf$power_Q[rowDdf$reads.div==2 & rowDdf$dB==1], col='green1',lwd=5*4,xlim=c(0,1), ylim=c(0, 1),
+  ylab="",yaxt='n')
+mtext("p.adj threshold",side=1,line=2.5)
+lines(x=rowDdf$Z[rowDdf$reads.div==2 & rowDdf$dB==1], y=rowDdf$power_Q[rowDdf$reads.div==2 & rowDdf$dB==1], col='green1',lwd=5*4)
+points(x=rowDdf$Z[rowDdf$reads.div==2 & rowDdf$dB==1], y=rowDdf$power_T[rowDdf$reads.div==2 & rowDdf$dB==1], col='royalblue1',lwd=5*4)
+lines(x=rowDdf$Z[rowDdf$reads.div==2 & rowDdf$dB==1], y=rowDdf$power_T[rowDdf$reads.div==2 & rowDdf$dB==1], col='royalblue1',lwd=5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$power_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+points(x=rowDdf$Z[rowDdf$reads.div==10 & rowDdf$dB==1], y=rowDdf$power_Q[rowDdf$reads.div==10 & rowDdf$dB==1], col='green4',lwd=2*4)
+lines(x=rowDdf$Z[rowDdf$reads.div==10 & rowDdf$dB==1], y=rowDdf$power_Q[rowDdf$reads.div==10 & rowDdf$dB==1], col='green4',lwd=2*4)
+points(x=rowDdf$Z[rowDdf$reads.div==10 & rowDdf$dB==1], y=rowDdf$power_T[rowDdf$reads.div==10 & rowDdf$dB==1], col='royalblue4',lwd=2*4)
+lines(x=rowDdf$Z[rowDdf$reads.div==10 & rowDdf$dB==1], y=rowDdf$power_T[rowDdf$reads.div==10 & rowDdf$dB==1], col='royalblue4',lwd=2*4)
+plot(x=rowDdf$Z[rowDdf$reads.div==2 & rowDdf$dB==1], y=rowDdf$eFDR_Q[rowDdf$reads.div==2 & rowDdf$dB==1], col='green1',lwd=5*4,xlim=c(0,1), ylim=c(0, 1),
+  ylab="",yaxt='n')
+axis(4, las=1)
+mtext("p.adj threshold",side=1,line=2.5)
+lines(x=rowDdf$Z[rowDdf$reads.div==2 & rowDdf$dB==1], y=rowDdf$eFDR_Q[rowDdf$reads.div==2 & rowDdf$dB==1], col='green1',lwd=5*4)
+points(x=rowDdf$Z[rowDdf$reads.div==2 & rowDdf$dB==1], y=rowDdf$eFDR_T[rowDdf$reads.div==2 & rowDdf$dB==1], col='royalblue1',lwd=5*4)
+lines(x=rowDdf$Z[rowDdf$reads.div==2 & rowDdf$dB==1], y=rowDdf$eFDR_T[rowDdf$reads.div==2 & rowDdf$dB==1], col='royalblue1',lwd=5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_Q[rowAdf$M==60 & rowAdf$dB==1], col='green3',lwd=3.5*4)
+points(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+lines(x=rowAdf$Z[rowAdf$M==60 & rowAdf$dB==1], y=rowAdf$eFDR_T[rowAdf$M==60 & rowAdf$dB==1], col='royalblue3',lwd=3.5*4)
+points(x=rowDdf$Z[rowDdf$reads.div==10 & rowDdf$dB==1], y=rowDdf$eFDR_Q[rowDdf$reads.div==10 & rowDdf$dB==1], col='green4',lwd=2*4)
+lines(x=rowDdf$Z[rowDdf$reads.div==10 & rowDdf$dB==1], y=rowDdf$eFDR_Q[rowDdf$reads.div==10 & rowDdf$dB==1], col='green4',lwd=2*4)
+points(x=rowDdf$Z[rowDdf$reads.div==10 & rowDdf$dB==1], y=rowDdf$eFDR_T[rowDdf$reads.div==10 & rowDdf$dB==1], col='royalblue4',lwd=2*4)
+lines(x=rowDdf$Z[rowDdf$reads.div==10 & rowDdf$dB==1], y=rowDdf$eFDR_T[rowDdf$reads.div==10 & rowDdf$dB==1], col='royalblue4',lwd=2*4)
+abline(0,1, col='red')
+dev.off()
+
